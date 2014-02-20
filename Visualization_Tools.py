@@ -6,7 +6,7 @@ from matplotlib.dates import MonthLocator, DateFormatter, DayLocator
 
 plt.ioff()
 
-def calories_over_range(dates_calories_sqlite_row:
+def calories_over_range(dates_calories_sqlite_row):
 
 	calories_datetimes_list = []
 	calories_list = []
@@ -30,8 +30,8 @@ def calories_over_range(dates_calories_sqlite_row:
 	start_date = datetimes_list[0]
 	end_date = datetimes_list[len(datetimes_list) -1]
 
-	print "Start date: "+start_date
-	print "End date: "+end_date
+	print "Start date: "+str(start_date)
+	print "End date: "+str(end_date)
 
 	#Find smallest and largest calorie counts for ymin and ymax
 	ymin = min(calories_list)

@@ -7,7 +7,7 @@ import datetime
 import Visualization_Tools as visual_tools
 from dateutil import parser
 
-connection = sqlite3.connect('/path/to/your/diet_data.db')
+connection = sqlite3.connect('pathtoyour/diet_data.db')
 
 connection.text_factory = str
 connection.row_factory = sqlite3.Row
