@@ -7,7 +7,7 @@ import datetime
 import Visualization_Tools as visual_tools
 from dateutil import parser
 
-connection = sqlite3.connect('pathtoyour/diet_data.db')
+connection = sqlite3.connect('/home/rachelle/Dropbox/Python/DietData/DietLog/Database-Scripts/diet_data.db')
 
 connection.text_factory = str
 connection.row_factory = sqlite3.Row
@@ -73,6 +73,34 @@ def calorie_analysis():
 		if pipe_to_visuals == 'Y': visual_tools.calories_over_range(range_calories)
 
 		else: calorie_analysis()
+
+	elif nav_command == '2':
+		#Fetch range of dates, just as done above, and sum up the calories column for all dates.
+		date_range = raw_input("Enter date range as 'year-mm-dd TO year-mm-dd': ")
+		date_range = date_range.split(' TO ', 1)
+		start = date_range[0]
+		end = date_range[1]
+
+		range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+
+		if not range_calories:
+			print "Records not found for given range."
+			calorie_analysis()
+		else:
+			total_calories = 0
+			total_days = len(range_calories)
+			missing_days = 0 #Keep count of days for which there were no records, and remove them from average computation
+
+			for record in range_calories:
+				if record[1] == 0: #If no record
+					missing_days += 1
+				total_calories += record[1] #Sum up all the calories over given period 
+
+			total_days -= missing_days #Subtract missing days from total days
+
+			print "Total calories consumed over range "+start+" to "+end+": "+str(total_calories)
+			print "Total days missing records: "+str(missing_days)
+			print "Average calories per day: "+str(total_calories/total_days)
 
 	else:
 		print 'Command '+nav_command+' not found.'
