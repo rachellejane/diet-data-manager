@@ -43,7 +43,7 @@ def calorie_analysis():
 	print "Enter the number of the analysis to query on and produce listed, visualization-ready data: "
 	print "1. View total calories over a range of dates. For viewing entries as text in terminal, use Database_Tools.view_dates()"
 	print "2. Sum up total calorie count for a range of dates."
-	#print "3. Calculate a BMR (whose fluctuation can be approximately computed) and compare it a date range of calories consumed."
+	print "3. Calculate a BMR for different phases of time and compare it a date range of calories consumed."
 	
 	nav_command = raw_input("Enter analysis number: ")
 
@@ -101,6 +101,66 @@ def calorie_analysis():
 			print "Total calories consumed over range "+start+" to "+end+": "+str(total_calories)
 			print "Total days missing records: "+str(missing_days)
 			print "Average calories per day: "+str(total_calories/total_days)
+
+	elif nav_command == '3':
+		#Give user information about the BMR formula, then get operands. Compute. Then use Harris Benedict equation to compute
+		#an approximation for daily expenditures that include physical activity.
+		#This number will be used in visualization as line against which calorie intake will be compared. 
+		#This comparison can be used to generate predictions on calories lost/gained/maintained
+
+		print "------------------"
+		print "We'll first collect gender, height, weight, and age information to compute your base metabolic rate, or BMR."
+		print "Your BMR represents the estimated number of calories your body would burn in maintaining itself if you were to "
+		print "lay motionless for an entire 24 hour period."
+		print "------------------"
+
+		gender = raw_input("Would your physiology be best categorized as MALE or FEMALE?: ")
+		height = raw_input("In inches, how tall are you: ")
+		height = float(height)
+		weight = raw_input("In pounds, how much do you weigh: ")
+		weight = float(weight)
+		age = raw_input("Age: ")
+		age = float(age)
+
+		if gender == 'MALE':
+			 estimated_BMR = 66+((6.23*weight)+(12.7*height)-( 6.8*age))
+		elif gender == 'FEMALE':
+			estimated_BMR = 655+((4.35*weight)+(4.7*height)-(4.7*age))
+		else:
+			print "Gotta fit the binary. Try again."
+			calorie_analysis()
+		
+		print "------------------"
+		print "Estimated BMR: "+str(estimated_BMR)
+		print "------------------"
+
+		print "Now consider your level of activity. If you are a bed-desk-car type person with basically no physical activity, "
+		print "enter SEDENTARY. If you are lightly active, with perhaps a brisk walk 1-3 times per week, enter LIGHT."
+		print "If you are get your pulse up with biking, light jogging, or other not-overly-intense but decent activities, enter "
+		print "MODERATE. If you are serious about exercise and work out hard most days of the week, input INTENSE. Finally, if you "
+		print "are an athlete, in marathon training, or workout in addition to having a physical job, input MAXIMUM." 
+
+		print "------------------"
+
+		activity_level = raw_input("Enter activity level: ")
+
+		#Multiply BMR by a scalar associated with each activity level to get estimated daily calorie burn
+		
+		if activity_level == 'SEDENTARY':
+			estimated_daily_burn = estimated_BMR*1.2
+		elif activity_level == 'LIGHT':
+			estimated_daily_burn = estimated_BMR*1.375
+		elif activity_level == 'MODERATE':
+			estimated_daily_burn = estimated_BMR*1.55
+		elif activity_level == 'INTENSE':
+			estimated_daily_burn = estimated_BMR*1.725
+		elif activity_level == 'MAXIMUM':
+			estimated_daily_burn = estimated_BMR*1.9
+		else:
+			print "Activity level description not found. Use the indicated descriptors."			
+
+		print "Estimated daily burn: "+str(estimated_daily_burn)
+		print "------------------"
 
 	else:
 		print 'Command '+nav_command+' not found.'
