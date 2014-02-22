@@ -16,7 +16,7 @@ c = connection.cursor()
 
 def display_menu():
 	print "Enter CALORIE-DRIVEN to perform analyses concerned primarily with calories consumed."
-	#print "Enter EXERCISE-DRIVEN for analyses concerned primarily with exercise."
+	print "Enter EXERCISE-DRIVEN for analyses concerned primarily with exercise."
 	#print "Enter FOOD-RECORD-DRIVEN for analyses conerning foods, times of consumption, calorie breakdowns, etc."
 	#Could do a row of pie charts indicating distribution of daily calories over each meal-time bracket
 	#print "Enter FOOD-INFO-DRIVEN for analyses on entered food information: types, calorie densities, portions"
@@ -35,15 +35,122 @@ def display_menu():
 	elif nav_command == 'CALORIE-DRIVEN':
 		calorie_analysis()
 
+	elif nav_command == 'EXERCISE-DRIVEN':
+		exercise_analysis()
+
 	else:
 		print 'Command '+nav_command+' not found.'
 		display_menu()
+
+def exercise_analysis():
+	print "Enter '1' to view exercise for a given date or range of dates."
+	print "Enter '2' to tabulate exercise totals for a range of dates."
+	print "Enter '3' to manage system list of known exercise types."
+	#print "Enter '3' to visualize exercise types in a pie chart for a range of dates"
+
+	nav_command = raw_input("Enter analysis number: ")
+
+	if nav_command == 'BACK':
+		display_menu()
+
+	elif nav_command == '1':
+		#Need to get user's range of dates, and then for those simply bring back all matching tuples from table exercise.
+		date_range = raw_input("Enter date range as single 'year-mm-dd' or 'year-mm-dd TO year-mm-dd': ")
+
+		if ' TO ' in date_range: #Date range given
+			date_range = date_range.split(' TO ', 1)
+			start = date_range[0]
+			end = date_range[1]
+
+			range_exercise = list(c.execute('SELECT * FROM exercise WHERE date BETWEEN ? AND ?', (start, end)))
+		
+		else: #Only one date
+			range_exercise = list(c.execute('SELECT * FROM exercise WHERE date = ?', (date_range,)))
+
+		if not range_exercise:
+			print "Records not found for given range"
+			exercise_analysis()
+
+		else:
+			for record in range_exercise:
+				print record[0]+"  "+record[1]
+
+	elif nav_command == '2':
+		print "This feature will try to calculate the total amount of time spent on a particular exercise by seeking its name "
+		print "and a number indicating time. The name comes from one of the inputted system tags.
+		"""
+		date_range = raw_input("Enter date range as single 'year-mm-dd' or 'year-mm-dd TO year-mm-dd': ")
+
+		if ' TO ' in date_range: #Date range given
+			date_range = date_range.split(' TO ', 1)
+			start = date_range[0]
+			end = date_range[1]
+
+			range_exercise = list(c.execute('SELECT * FROM exercise WHERE date BETWEEN ? AND ?', (start, end)))
+		
+		else: #Only one date
+			range_exercise = list(c.execute('SELECT * FROM exercise WHERE date = ?', (date_range,)))
+
+		if not range_exercise:
+			print "Records not found for given range"
+			exercise_analysis()
+
+		else:
+			for record in range_exercise:
+				print record[0]+"  "+record[1]
+		"""
+
+	elif nav_command == '3':
+		print "To view current contents of known exercise-type system list, enter '1'."
+		print "To add exercise types to the system list, enter '2'."
+		print "Enter 'BACK' to return to exercise analysis menu."
+
+		nav_number = raw_input("Enter command: ")
+
+		if nav_number == 'BACK':
+			exercise_analysis()
+		elif nav_number == '1':
+			#System tags exist as entries for the single column exercise_name in table exercise_info
+			exercise_tag_list = list(c.execute('SELECT * FROM exercise_info'))
+
+			if not exercise_tag_list: 
+				print "No system tags for exercise -- input some?"
+
+			else: 
+				for tag in exercise_tag_list: print tag
+
+		elif nav_number == '2':
+			while True:
+				#Add a system tag; an ugly system, but I'm entering 3 forms of the exercise verb; base, past, gerund
+				#Also, for my purposes, entering "work" to be an indicator that I commuted by bike/foot
+				tag_to_enter = raw_input("Enter an exercise name to enter as a system tag: ")
+				c.execute('INSERT INTO exercise_info VALUES (?)', (tag_to_enter,))
+	
+				continue_adding = raw_input('Enter Y to keep adding tags, N to stop: ' )
+
+				if continue_adding.strip() == 'N':
+					connection.commit()
+					break
+		
+
+		else: 
+			print "Command not found"
+			exercise_analysis()
+
+
+	display_menu()		
+
+
+def contains_digits(d):
+	_digits = re.compile('\d')
+	return bool(_digits.search(d))
 
 def calorie_analysis():
 	print "Enter the number of the analysis to query on and produce listed, visualization-ready data: "
 	print "1. View total calories over a range of dates. For viewing entries as text in terminal, use Database_Tools.view_dates()"
 	print "2. Sum up total calorie count for a range of dates."
-	print "3. Calculate a BMR for different phases of time and compare it a date range of calories consumed."
+	print "3. Calculate a single BMR and visually compare it a date range of calories consumed."
+	print "4. Calculate changing BMR/daily burn estimations to reflect weight/activity/age changes over a long date range."
 	
 	nav_command = raw_input("Enter analysis number: ")
 
@@ -161,6 +268,27 @@ def calorie_analysis():
 
 		print "Estimated daily burn: "+str(estimated_daily_burn)
 		print "------------------"
+
+		pipe_to_visuals = raw_input("Prepare output with imposed daily expense rate for visual comparison? Y or N: ")
+	
+		if pipe_to_visuals == 'Y': 
+			#Fetch range of dates, just as done above, and sum up the calories column for all dates.
+			#MOVE ALL THIS TO A SEPERATE HELPER FUNCTION THAT RETURNS DAILY_TOTALS OVER A RANGE
+			date_range = raw_input("Enter date range as 'year-mm-dd TO year-mm-dd': ")
+			date_range = date_range.split(' TO ', 1)
+			start = date_range[0]
+			end = date_range[1]
+
+			range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+
+			if not range_calories:
+				print "Records not found for given range."
+				calorie_analysis()
+
+			visual_tools.calories_over_range(range_calories)
+
+		else: calorie_analysis()
+		
 
 	else:
 		print 'Command '+nav_command+' not found.'

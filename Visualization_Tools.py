@@ -41,11 +41,17 @@ def calories_over_range(dates_calories_sqlite_row):
 	xmin = min(datetimes_list)
 	xmax = max(datetimes_list)
 
+	points_count = len(datetimes_list) #Get number of points
+
 	#plt.axis([xmin, xmax, ymin, ymax]) It actually looks better when matplotlib handles this itself
 
-	if xmin.year == xmax.year: #If years the same, no need to repeatedly display the year on each date
+	if xmin.year == xmax.year and points_count < 10: #If years the same, no need to repeatedly display the year on each date
 		date_format = '%m-%d'
-	#elif: will have more fully-fledged display conditions once i have more data
+		date_range = DayLocator(bymonthday=None, interval=1, tz=None)
+	elif xmin.year == xmax.year and points_count >= 10: #Dont' display same year and don't clutter up x-axis w/too many dates
+		date_format = '%m-%d'
+		date_range = DayLocator(bymonthday=None, interval=2, tz=None) #Display every other day if >10 dates
+	#elif: define more elif conditions for more situations as they arise
 	else:
 		date_format = '%Y-%m-%d'
 		
@@ -53,7 +59,6 @@ def calories_over_range(dates_calories_sqlite_row):
 	#months    = MonthLocator(range(0, 3), bymonthday=1, interval=1)
 	#monthsFmt = DateFormatter("%b '%y")
 
-	date_range = DayLocator(bymonthday=None, interval=1, tz=None)
 	plt.gca().xaxis.set_major_formatter(DateFormatter(date_format))
 	plt.gca().xaxis.set_major_locator(date_range)
 	

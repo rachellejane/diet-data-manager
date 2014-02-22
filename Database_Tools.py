@@ -13,7 +13,7 @@ c = connection.cursor()
 def display_menu():
 
 	print "Enter 'NEW' to add a new day's worth of data."
-	print "Enter 'ANALYZE' to pull chosen data and run analytics"
+	print "Enter 'VIEW' to pull chosen data for simple viewing"
 	#print "Enter 'EDIT' to edit an entry"
 	#print "Enter 'HELP' to display manual page." -- move this to driving class
 	print "Enter 'QUIT' to exit to interpreter"
@@ -22,8 +22,8 @@ def display_menu():
 
 	if nav_command == 'NEW':
 		add_new_date()
-	elif nav_command == 'ANALYZE':
-		analyze()
+	elif nav_command == 'VIEW':
+		view()
 	elif nav_command == 'HELP':
 		print "This functionality not yet built"
 		#display_help_page()
@@ -38,10 +38,8 @@ def display_menu():
 		print 'Command '+nav_command+' not found.'
 		display_menu()
 
-def analyze():
-	#Just set up an easy way to build SQLite queries for the time being
-	#Wishlist for analyze: a command called 'IDEAS' that tosses up randomized analysis possibilities	
-	print "Analysis Tools: "
+def view():
+	print "Viewing Tools: "
 	print "Enter 'VIEW-DATES' to view entries for one or more days"
 	print "Enter 'VIEW-FOOD-INFO' to view food information by name, type, or calorie density"
 	print "Enter 'BACK' to return to menu"
@@ -56,7 +54,7 @@ def analyze():
 		display_menu()
 	else:
 		print 'Command '+nav_command+' not found.'
-		analyze()
+		view()
 
 def view_foods_info():
 	#View food entries by name and other attributes (like calorie count, type, etc.)
@@ -332,12 +330,12 @@ def add_new_date():
 			print "This food item does not have an associated entry in the information table. Add one now: "
 
 			while True:
-				info_food = raw_input('Food name: ')
+				#info_food = raw_input('Food name: ')
 				food_type = raw_input('Food type: ')
 				serving_size = raw_input('Serving size: ')
 				calories_per_serving = raw_input('Calories per serving: ')
 
-				food_info_row = info_food+" "+food_type+" "+serving_size+" "+calories_per_serving
+				food_info_row = food+" "+food_type+" "+serving_size+" "+calories_per_serving
 
 				print food_info_row
 
