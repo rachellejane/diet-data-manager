@@ -4,6 +4,7 @@
 import sqlite3
 import sys
 import datetime
+import re
 import Visualization_Tools as visual_tools
 from dateutil import parser
 
@@ -46,7 +47,6 @@ def exercise_analysis():
 	print "Enter '1' to view exercise for a given date or range of dates."
 	print "Enter '2' to tabulate exercise totals for a range of dates."
 	print "Enter '3' to manage system list of known exercise types."
-	#print "Enter '3' to visualize exercise types in a pie chart for a range of dates"
 
 	nav_command = raw_input("Enter analysis number: ")
 
@@ -76,9 +76,6 @@ def exercise_analysis():
 				print record[0]+"  "+record[1]
 
 	elif nav_command == '2':
-		print "This feature will try to calculate the total amount of time spent on a particular exercise by seeking its name "
-		print "and a number indicating time. The name comes from one of the inputted system tags.
-		"""
 		date_range = raw_input("Enter date range as single 'year-mm-dd' or 'year-mm-dd TO year-mm-dd': ")
 
 		if ' TO ' in date_range: #Date range given
@@ -96,9 +93,72 @@ def exercise_analysis():
 			exercise_analysis()
 
 		else:
-			for record in range_exercise:
-				print record[0]+"  "+record[1]
-		"""
+			#Now, rather than dumping this out to screen, we're going to group things by exercise rather than date
+			#Column in exercise_info with conjugated verb forms is not needed -- just use the base form of the 
+			#verb, along with an enforced input format. Format: <time spent as decimal hours>, <exercise verb base form>
+
+			#In Database_Tools, will need to do a check of the tag list for anything inputted in the exercise field,
+			#exactly as is done for food_entries and food_info
+			exercise_totals_list = []
+
+			exercise_tag_list = list(c.execute('SELECT * FROM exercise_info'))
+
+			if not exercise_tag_list:
+				print "No exercise tags to analyze data with; please go enter some with option 3"
+				exercise_analysis()
+
+			else:
+				for record in range_exercise:
+					#record[0] contains the date, record[1] the exercise string
+					if record[1].lower() == "none": continue #If no exercise for the day, skip
+
+					#Handle multiple exercise types for a single day, if need be
+					elif ", " in record[1]:
+						exercises = record[1].split(', ')
+						for exercise in exercises:
+							exercise_totals_list.append(exercise)
+					
+					#Single exercise listed for the day						
+					else: exercise_totals_list.append(record[1])
+	
+		#Now that we have a list with all exercises included, we need to calculate times
+		#spent doing each activity and display them as a group			
+		#We are now enforcing a strict format, so can easily pull times and dates
+		final_counts = []
+
+		for tag in exercise_tag_list: #Categorize by tag
+			duration = 0.0
+			times_count = 0
+
+			for row in exercise_totals_list:
+
+				if tag[0] in row:
+					if contains_digits(row): #If row contains numbers, it's an hourly activity
+						#We should split and take the first item off to get our float number
+						numbers = row.split(" ") #Split around space
+						numbers = numbers[0]
+						duration += float(numbers)
+					else: #It's an activity counted in times done, rather than in terms of duration
+						times_count += 1
+
+			if duration == 0 and times_count == 0: continue #If no time spent, don't add anything to final_counts
+
+			if duration != 0 and times_count == 0: #If we have a duration
+				activity = tag[0]
+				final_counts.append("Total hours spent on activity: "+tag[0]+" = "+str(duration))
+
+			if duration == 0 and times_count != 0: #If we have a counted activity
+				activity = tag[0]
+				final_counts.append("Activity: "+tag[0]+" done "+str(times_count)+" times.")
+		
+		for item in final_counts:
+			print item
+
+		#print "visualize breakdown as pie chart?"	
+					
+		display_menu()
+				
+		
 
 	elif nav_command == '3':
 		print "To view current contents of known exercise-type system list, enter '1'."
@@ -117,14 +177,15 @@ def exercise_analysis():
 				print "No system tags for exercise -- input some?"
 
 			else: 
-				for tag in exercise_tag_list: print tag
+				for tag in exercise_tag_list: print tag[0]+" "+tag[1]
 
 		elif nav_number == '2':
 			while True:
 				#Add a system tag; an ugly system, but I'm entering 3 forms of the exercise verb; base, past, gerund
 				#Also, for my purposes, entering "work" to be an indicator that I commuted by bike/foot
-				tag_to_enter = raw_input("Enter an exercise name to enter as a system tag: ")
-				c.execute('INSERT INTO exercise_info VALUES (?)', (tag_to_enter,))
+				tag_to_enter = raw_input("Enter an exercise tag as possible verb form: ")
+				exercise_group = raw_input("Enter the exercise base verb form: ")				
+				c.execute('INSERT INTO exercise_info VALUES (?, ?)', (tag_to_enter, exercise_group))
 	
 				continue_adding = raw_input('Enter Y to keep adding tags, N to stop: ' )
 
@@ -141,9 +202,12 @@ def exercise_analysis():
 	display_menu()		
 
 
-def contains_digits(d):
+def contains_digits(text):
 	_digits = re.compile('\d')
-	return bool(_digits.search(d))
+	_decimaldigits_nolead = re.compile('.\d+')
+	_decimaldigits = re.compile('\d+.\d+')
+	if _digits.search(text) or _decimaldigits_nolead.search(text) or _decimaldigits.search(text):
+		return True
 
 def calorie_analysis():
 	print "Enter the number of the analysis to query on and produce listed, visualization-ready data: "
