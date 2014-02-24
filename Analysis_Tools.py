@@ -125,6 +125,7 @@ def exercise_analysis():
 		#spent doing each activity and display them as a group			
 		#We are now enforcing a strict format, so can easily pull times and dates
 		final_counts = []
+		raw_finals_counts = []
 
 		for tag in exercise_tag_list: #Categorize by tag
 			duration = 0.0
@@ -146,17 +147,21 @@ def exercise_analysis():
 			if duration != 0 and times_count == 0: #If we have a duration
 				activity = tag[0]
 				final_counts.append("Total hours spent on activity: "+tag[0]+" = "+str(duration))
+				raw_finals_counts.append([tag[0], duration])
 
 			if duration == 0 and times_count != 0: #If we have a counted activity
 				activity = tag[0]
 				final_counts.append("Activity: "+tag[0]+" done "+str(times_count)+" times.")
+				raw_finals_counts.append([tag[0], times_count])
 		
 		for item in final_counts:
 			print item
 
-		#print "visualize breakdown as pie chart?"	
-					
-		display_menu()
+		to_pie_chart = raw_input("Enter 'Y' to visualize breakdown as pie chart, 'N' to return to menu: ")
+
+		if to_pie_chart == 'Y': visual_tools.exercise_pie_chart(raw_finals_counts, start, end)
+		
+		else: display_menu()
 				
 		
 

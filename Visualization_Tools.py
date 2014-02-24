@@ -6,6 +6,40 @@ from matplotlib.dates import MonthLocator, DateFormatter, DayLocator
 
 plt.ioff()
 
+def exercise_pie_chart(raw_finals_counts, start, end):
+
+	labels = []
+	fracs = []
+	countable_items = []	
+
+	for datapoint in raw_finals_counts:
+		#datapoint[0] contains the name, datapoint[1] the total duration or times done.
+		#If datapoint[1] is an int, then it's a counted activity (like bike commutes)
+		if isinstance(datapoint[1], int):
+			countable_items.append(datapoint)
+			#Need to have this display as a caption
+		else: #Datapoint represents something that should go to the pie chart
+			labels.append(datapoint[0]+"\n"+str(datapoint[1])+" hours")
+			fracs.append(datapoint[1])
+	
+	# make a square figure and axes
+	plt.figure(1, figsize=(6,6))
+
+	plt.pie(fracs, labels=labels, autopct='%1.1f%%', shadow=True)
+                # The default startangle is 0, which would start
+                # the Frogs slice on the x-axis.  With startangle=90,
+                # everything is rotated counter-clockwise by 90 degrees,
+                # so the plotting starts on the positive y-axis.
+
+	plt.title('Exercise breakdown for date range: \n'+start+" to "+end, bbox={'facecolor':'0.8', 'pad':5})
+
+	plt.rcParams['text.color'] = 'r'
+	plt.rcParams['lines.linewidth'] = 2
+	plt.rcParams['font.family'] = 'monospace'
+	plt.rcParams['font.weight'] = 'bold'
+	
+	plt.show()
+
 def calories_over_range(dates_calories_sqlite_row):
 
 	calories_datetimes_list = []
