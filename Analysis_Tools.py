@@ -18,7 +18,7 @@ c = connection.cursor()
 def display_menu():
 	print "Enter CALORIE-DRIVEN to perform analyses concerned primarily with calories consumed."
 	print "Enter EXERCISE-DRIVEN for analyses concerned primarily with exercise."
-	#print "Enter FOOD-RECORD-DRIVEN for analyses conerning foods, times of consumption, calorie breakdowns, etc."
+	print "Enter FOOD-DRIVEN for analyses conerning foods, times of consumption, calorie breakdowns, etc."
 	#Could do a row of pie charts indicating distribution of daily calories over each meal-time bracket
 	#print "Enter FOOD-INFO-DRIVEN for analyses on entered food information: types, calorie densities, portions"
 	print "Enter QUIT to exit to interpreter."
@@ -39,9 +39,124 @@ def display_menu():
 	elif nav_command == 'EXERCISE-DRIVEN':
 		exercise_analysis()
 
+	elif nav_command == 'FOOD-DRIVEN':
+		food_analysis()
+
 	else:
 		print 'Command '+nav_command+' not found.'
 		display_menu()
+
+def food_analysis():
+	print "View individual date entries or entries over a date range with Database_Tools."
+	print "Enter '1' to see how often, or how much of, you ate a particular food over a date range."
+		#And then a sub-option of this will be to see during what times of day this food/bev tended to be consumed in
+
+	nav_command = raw_input("Enter analysis number: ")
+
+	if nav_command == 'BACK':
+		display_menu()
+
+	elif nav_command == '1':
+
+		search_food = raw_input("Enter an uncapitalized food or beverage to search for: ")
+		date_range = raw_input("Enter the single date or date range to search over: ")
+
+		matching_foods = []
+
+		if ' TO ' in date_range: #Date range given
+			date_range = date_range.split(' TO ', 1)
+			start = date_range[0]
+			end = date_range[1]
+
+			date_foods = list(c.execute('SELECT * FROM food_entries WHERE date BETWEEN ? AND ?', (start, end)))
+			
+		#Don't look at punctuation, and loosely match any occurance of the string
+		
+		else: #Only one date
+			date_foods = list(c.execute('SELECT * FROM food_entries WHERE date = ?', (date_range,)))
+
+		if not date_foods:
+			print "Records or foods not found for given data"
+			food_analysis()
+
+		else:
+			times_consumed = 0		
+			for record in date_foods:
+				if search_food.lower() in record[2].lower():
+					print record[0]+"  "+record[1]+"  "+record[2]+"  "+str(record[3])
+					#     date           time           food name       calories
+					matching_foods.append(record)
+					times_consumed += 1
+			
+			print "-------"
+			print search_food+" consumed on "+str(times_consumed)+ " occasions"
+			print "-------"
+
+			refine_search = raw_input("Refine search by name, time, or servings consumed -- Y/N: ")
+	
+			if refine_search == 'Y':
+				print "Enter 'NAME' to refine search by additional names for "+search_food
+				print "Enter 'TIME' to refine search by times you consumed "+search_food
+				print "Enter 'SERVINGS' to determine how many servings of "+search_food+" were eaten"
+				refine_command = raw_input("Enter: ")
+
+				if refine_command == 'NAME':
+					print "Enter more phrases to narrow down list of matching food items."
+					print "For instance, an initial search for 'milk' might be narrowed with '2%' or 'chocolate'."
+
+					refine_term = raw_input("Enter: ")
+					times_consumed = 0
+
+					for record in matching_foods:
+						if refine_term.lower() in record[2].lower():
+							print record[0]+"  "+record[1]+"  "+record[2]+"  "+str(record[3])
+							times_consumed += 1
+
+					print "------"
+					print refine_term+" + "+search_food+" consumed "+str(times_consumed)+" times."
+					print "------"
+					#This needs to be in its own function. Actually, most everything under a command-conditional
+					#in this module needs to be moved into its own function
+		
+					#This will allow me to make even further refined searches; such as getting the specific food item
+					#for a date range and then seeing the times at which it was eaten
+
+					food_analysis()
+					
+
+				elif refine_command == 'TIME':
+					print "Enter a time -- morning, afternoon, evening, lunch, etc. to narrow matching rows"
+					print "There are no system-enforced time tags, so remember what you call your times!"
+
+					refine_time = raw_input("Enter: ")
+					times_consumed = 0
+
+					for record in matching_foods:
+						if refine_time.lower() in record[1].lower():
+							print record[0]+"  "+record[1]+"  "+record[2]+"  "+str(record[3])
+							times_consumed += 1
+
+					print "------"
+					print search_food+" eaten in/at time: "+refine_time+" "+str(times_consumed)+" times."
+					print "------"
+					food_analysis()
+				
+
+				elif refine_command == 'SERVINGS':
+					print "In the works"
+
+				else: 
+					print "Command not found."
+					food_analysis()			
+
+			else: food_analysis()
+
+
+		
+		
+	else:
+		print "Command not found."
+		food_analysis()	
 
 def exercise_analysis():
 	print "Enter '1' to view exercise for a given date or range of dates."
