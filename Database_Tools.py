@@ -15,7 +15,8 @@ def display_menu():
 	print "Enter 'NEW' to add a new day's worth of data."
 	print "Enter 'VIEW' to pull chosen data for simple viewing"
 	#print "Enter 'EDIT' to edit an entry"
-	#print "Enter 'HELP' to display manual page." -- move this to driving class
+	#print "Enter 'HELP' to display manual page."
+	#print "Enter 'SETUP-NEW' to create a new database and tables -- only do this the first time you use"
 	print "Enter 'QUIT' to exit to interpreter"
 
 	nav_command = raw_input('Enter Command: ')
@@ -284,7 +285,14 @@ def add_new_date():
 			date = raw_input('Please re-enter the date as year-mm-dd: ')
 
 		total_calories = raw_input('Enter total calories: ')
-		exercise = raw_input('Enter exercise description: ')
+	
+		#This type of stuff will later be moved to the help page
+		print "Enter exercise descriptions as: <decimal hour> <unconjugated verb> for durative exercises -- running, biking, etc."
+		print "Enter exercise descriptions as: <unconjugated verb> / 'work' for countable entries -- sessions, classes, commutes."
+		print "Separate multiple exercises with a comma and space."
+		print "Example: '1.25 run, lift, abs'"
+
+		exercise = raw_input('Enter exercise description as unconjugated verb (ie: run, bike, swim): ')
 	
 		basic_data_row = date + " " + total_calories + " " + exercise
 	
@@ -298,6 +306,7 @@ def add_new_date():
 			#Insert into exercise table
 			exercise_entry = [(date, exercise)]
 			c.execute('INSERT INTO exercise VALUES (?, ?)', (date, exercise))
+
 			break
 
 	print "Input food entries at the prompt."
