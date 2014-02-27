@@ -98,7 +98,12 @@ def calories_over_range(dates_calories_sqlite_row, bmr):
 	if bmr != None:
 		#Fill bmr values list
 		for each in datetimes_list:
-			bmr_values.append(bmr)		
+			bmr_values.append(bmr)
+
+		#Draw BMR/Estimated Daily Burn line
+		plt.plot(datetimes_list, bmr_values,  color = 'b', ls = '-')
+		
+			
 
 
 	plt.gca().xaxis.set_major_formatter(DateFormatter(date_format))
@@ -111,9 +116,6 @@ def calories_over_range(dates_calories_sqlite_row, bmr):
 	plt.plot(datetimes_list, calories_list_ma, marker = 'x', color = 'r', ls = '-')
 
 	plt.gcf().autofmt_xdate()
-
-	#Draw BMR/Estimated Daily Burn line
-	plt.plot(datetimes_list, bmr_values,  color = 'b', ls = '-')
 
 	plt.title("Calories Over Date Range: "+str(start_date)+" to "+str(end_date))
     
