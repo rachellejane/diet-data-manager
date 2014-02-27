@@ -21,7 +21,7 @@ def display_menu():
 	print "Enter FOOD-DRIVEN for analyses conerning foods, times of consumption, calorie breakdowns, etc."
 	#Could do a row of pie charts indicating distribution of daily calories over each meal-time bracket
 	#print "Enter FOOD-INFO-DRIVEN for analyses on entered food information: types, calorie densities, portions"(merge into food-driven)
-	print "Enter QUIT to exit to interpreter."
+	print "Enter QUIT to exit to terminal."
 
 	nav_command = raw_input("Enter a command: ")
 
@@ -480,19 +480,25 @@ def view_calories_over_date_range():
 	pipe_to_visuals = raw_input("Plot information? -- Y or N: ")
 
 	if pipe_to_visuals == 'Y': 
-		visual_tools.calories_over_range(range_calories)
+		visual_tools.calories_over_range(range_calories, None)
 		calorie_analysis()
 
 	else: calorie_analysis()
 
 def sum_total_calories():
-	#Fetch range of dates, just as done above, and sum up the calories column for all dates.
-	date_range = raw_input("Enter date range as 'year-mm-dd TO year-mm-dd': ")
-	date_range = date_range.split(' TO ', 1)
-	start = date_range[0]
-	end = date_range[1]
 
-	range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+	date_range = raw_input("Enter date range as 'year-mm-dd TO year-mm-dd': ")
+
+	if ' TO ' in date_range:
+		#Fetch range of dates, just as done above, and sum up the calories column for all dates.
+		date_range = date_range.split(' TO ', 1)
+		start = date_range[0]
+		end = date_range[1]
+
+		range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+
+	else: 
+		print "Re-enter the date range with format: YEAR-MM-DD TO YEAR-MM-DD"
 
 	if not range_calories:
 		print "Records not found for given range."
@@ -590,7 +596,7 @@ def compute_bmr():
 			calorie_analysis()
 
 		#This is another use of calories_over_range visualization -- need to make new function to superimpose BMR line
-		visual_tools.calories_over_range(range_calories)
+		visual_tools.calories_over_range(range_calories, estimated_daily_burn)
 		calorie_analysis()
 
 	else: calorie_analysis()

@@ -40,7 +40,7 @@ def exercise_pie_chart(raw_finals_counts, start, end):
 	
 	plt.show()
 
-def calories_over_range(dates_calories_sqlite_row):
+def calories_over_range(dates_calories_sqlite_row, bmr):
 
 	calories_datetimes_list = []
 	calories_list = []
@@ -93,6 +93,14 @@ def calories_over_range(dates_calories_sqlite_row):
 	#months    = MonthLocator(range(0, 3), bymonthday=1, interval=1)
 	#monthsFmt = DateFormatter("%b '%y")
 
+	bmr_values = []
+
+	if bmr != None:
+		#Fill bmr values list
+		for each in datetimes_list:
+			bmr_values.append(bmr)		
+
+
 	plt.gca().xaxis.set_major_formatter(DateFormatter(date_format))
 	plt.gca().xaxis.set_major_locator(date_range)
 	
@@ -103,6 +111,9 @@ def calories_over_range(dates_calories_sqlite_row):
 	plt.plot(datetimes_list, calories_list_ma, marker = 'x', color = 'r', ls = '-')
 
 	plt.gcf().autofmt_xdate()
+
+	#Draw BMR/Estimated Daily Burn line
+	plt.plot(datetimes_list, bmr_values,  color = 'b', ls = '-')
 
 	plt.title("Calories Over Date Range: "+str(start_date)+" to "+str(end_date))
     

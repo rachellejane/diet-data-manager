@@ -3,7 +3,7 @@ import sys
 import datetime
 from dateutil import parser
 
-connection = sqlite3.connect('/home/rachelle/Dropbox/Python/DietData/DietLog/Database-Scripts/diet_data.db')
+connection = sqlite3.connect('/home/rachelle/Dropbox/Python/DietData/DietLog/Database-Scripts/diet_drama.db')
 
 connection.text_factory = str
 connection.row_factory = sqlite3.Row
@@ -16,7 +16,7 @@ def display_menu():
 	print "Enter 'VIEW' to pull chosen data for simple viewing"
 	#print "Enter 'EDIT' to edit an entry"
 	#print "Enter 'HELP' to display manual page."
-	#print "Enter 'SETUP-NEW' to create a new database and tables -- only do this the first time you use"
+	print "Enter 'SETUP-NEW' to create a new database and tables -- only do this the first time you use"
 	print "Enter 'QUIT' to exit to interpreter"
 
 	nav_command = raw_input('Enter Command: ')
@@ -28,6 +28,8 @@ def display_menu():
 	elif nav_command == 'HELP':
 		print "This functionality not yet built"
 		#display_help_page()
+	elif nav_command == 'SETUP-NEW':
+		setup_new_database()
 	elif nav_command == 'QUIT':
 		quit = raw_input('Enter Y to quit, N to continue working: ')
 		if quit == 'Y':
@@ -37,6 +39,19 @@ def display_menu():
 			nav_command = raw_input('Enter command: ')
 	else:
 		print 'Command '+nav_command+' not found.'
+		display_menu()
+
+def setup_new_database():
+	#connection = sqlite3.connect(/path/to/user/database/diet_data.db will automatically create the DB if it doesn't exist
+	#Just need to set up tables now
+	setup_new = raw_input("Is this your first time setting up the database? -- Y/N: ")
+	if setup_new == 'Y':
+		c.execute('CREATE TABLE IF NOT EXISTS daily_totals (date text, calories int)')
+		c.execute('CREATE TABLE IF NOT EXISTS exercise (date text, exercise text)')
+		c.execute('CREATE TABLE IF NOT EXISTS exercise_info (exercise_name text)')
+		c.execute('CREATE TABLE IF NOT EXISTS food_entries (date text, time text, food text, calories int, estimated text)')
+		c.execute('CREATE TABLE IF NOT EXISTS food_info (name text, type text, calories_per_serving int, serving_size text)')
+	else:
 		display_menu()
 
 def view():
