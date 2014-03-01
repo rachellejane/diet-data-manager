@@ -3,7 +3,7 @@ import sys
 import datetime
 from dateutil import parser
 
-connection = sqlite3.connect('/home/rachelle/Dropbox/Python/DietData/DietLog/Database-Scripts/diet_drama.db')
+connection = sqlite3.connect('/home/rachelle/Dropbox/Python/DietData/DietLog/Database-Scripts/diet_data.db')
 
 connection.text_factory = str
 connection.row_factory = sqlite3.Row

@@ -438,7 +438,7 @@ def calorie_analysis():
 	print "1. View total calories over a range of dates. For viewing entries as text in terminal, use Database_Tools.view_dates()"
 	print "2. Sum up total and average calorie count for a range of dates."
 	print "3. Calculate a single BMR and visually compare it a date range of calories consumed."
-	#print "4. Calculate changing BMR/daily burn estimations to reflect weight/activity/age changes over a long date range."
+	print "4. Use BMR/estimated daily burn with calories over range to estimate surplus, deficit, and maintainence patterns."
 	
 	nav_command = raw_input("Enter analysis number: ")
 
@@ -453,6 +453,9 @@ def calorie_analysis():
 
 	elif nav_command == '3':
 		compute_bmr()
+
+	elif nav_command == '4':
+		surplus_deficit_over_range()
 
 	else:
 		print "Command not found."
@@ -581,6 +584,17 @@ def compute_bmr():
 	print "Estimated daily burn: "+str(estimated_daily_burn)
 	print "------------------"
 
+	#Enter estimated daily burn rate for a date range into database -- with this data persistant for a date range, user can
+	#adjust BMR assumptions for ranges of time (particularly active phases, long holidays, weight loss, etc.)
+	enter_new_range_assumption = raw_input("Enter new BMR and daily burn assumption for a date range? Y or N: ")
+
+	if enter_new_range_assumption == 'Y':
+		date_range = raw_input("Enter date range as 'year-mm-dd TO year-mm-dd': ")
+		date_range = date_range.split(' TO ', 1)
+		start = date_range[0]
+		end = date_range[1]
+		new_metabolic_estimate(start, end, estimated_BMR, estimated_daily_burn)
+
 	pipe_to_visuals = raw_input("Prepare output with imposed daily expense rate for visual comparison? Y or N: ")
 
 	if pipe_to_visuals == 'Y': 
@@ -595,12 +609,92 @@ def compute_bmr():
 			print "Records not found for given range."
 			calorie_analysis()
 
-		#This is another use of calories_over_range visualization -- need to make new function to superimpose BMR line
+		
 		visual_tools.calories_over_range(range_calories, estimated_daily_burn)
 		calorie_analysis()
 
 	else: calorie_analysis()
 
+def new_metabolic_estimate(start, end, estimated_BMR, estimated_daily_burn):
+	#Might make more sense to have this in Database_Tools
+	#Get date range, estimated_BMR, and estimated_daily_burn from compute_bmr()
+	c.execute('INSERT INTO metabolic_estimates VALUES (?, ?, ?, ?)', (start, end, estimated_BMR, estimated_daily_burn))
+	connection.commit()
+	calorie_analysis()
+
+def surplus_deficit_over_range():
+	print "This function will calculate and plot variances in calorie intake against one or more periods of estimated daily burns -- "
+	print "This will yield a list of differences showing surplus, deficit, or maintainence by day."
+	print "You'll be able to get an estimate for how much weight in pounds could be assumed to have been gained or lost over some time."
+	print "There will finally be the option to plot the list of differences visually"
+
+	date_range = raw_input("Enter dates-calories range as 'year-mm-dd TO year-mm-dd': ")
+	date_range_split = date_range.split(' TO ', 1)
+
+	start = date_range_split[0]
+
+	end = date_range_split[1]
+
+	range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+
+	all_metabolic_estimate_rows = list(c.execute('SELECT * FROM metabolic_estimates'))
+
+	differences_list = []
+
+	for row in all_metabolic_estimate_rows:
+		#row[0] represents start date, row[1] represents end date for each BMR/daily_burn interval
+
+		#We first convert the interval dates to datetime objects
+		interval_start = row[0].split('-', 2)
+		start_datetime = [int(i) for i in interval_start]
+		start_datetime = datetime.datetime(start_datetime[0], start_datetime[1], start_datetime[2])
+
+		interval_end = row[1].split('-', 2)
+		end_datetime = [int(i) for i in interval_end]
+		end_datetime = datetime.datetime(end_datetime[0], end_datetime[1], end_datetime[2])
+
+		for record in range_calories:
+			date_as_datetime = record[0].split('-', 2)
+			date_as_datetime = [int(i) for i in date_as_datetime]
+			date_as_datetime = datetime.datetime(date_as_datetime[0], date_as_datetime[1], date_as_datetime[2])
+
+			if start_datetime <= date_as_datetime <= end_datetime:
+				#If calories=0 for the day, then skip the row
+				if record[1] == 0: continue
+
+				#Now perform the comparison computation and append result to differences_list
+				#Not totally sure the BMR comparison will be useful toward any analysis...
+				bmr_comparison = record[1] - row[2] #bmr_comparison = total_calories - bmr
+				bmr_comparison = int(bmr_comparison)
+
+				burn_comparison = record[1] - row[3] #burn_comparison = total_calories - daily_burn
+				burn_comparison = int(burn_comparison)
+
+				differences_list.append([record[0], bmr_comparison, burn_comparison])
+
+	estimated_net_change = 0.0
+
+	for row in differences_list:
+		estimated_net_change += row[2]
+		print "Date: "+row[0]+" -- Calories stored or burned: "+str(row[2])
+
+			
+	print "------------------"
+	print "Estimated net caloric change over range: "+str(estimated_net_change)
+	#Assumption is that 3500 calories makes 1 pound of body fat; a contentious theory, but more or less true in my own experience
+	estimated_weight_change = estimated_net_change/3500
+	if estimated_weight_change <0:
+		print "Estimated weight loss: "+str("%.2f" % estimated_weight_change)+" pounds."
+	elif estimate_weight_change >0:
+		print "Estimated weight gain: "+str("%.2f" % estimated_weight_change)+" pounds."
+	else:
+		print "Complete maintainence -- a state truly difficult to achieve!"
+	
+	print "------------------"	
+
+
+
+	#surplus_deficit_over_range(range_calories, bmr, daily_burn  -- send this: range_calories, metabolic_estimate_itnervals
 #####Run script
 
 display_menu()
