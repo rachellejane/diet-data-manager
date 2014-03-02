@@ -706,7 +706,6 @@ def times_breakdown():
 
 	for date in date_range:
 		date_entries = list(c.execute('SELECT * FROM food_entries WHERE date = ?', (date[0],)))
-		computed_total = 0
 
 		for entry in date_entries:
 			#print entry
@@ -728,10 +727,7 @@ def times_breakdown():
 				if item[2] == 0:continue #Means tag not used, or calorie field = 0
 				else:
 					print item[0]+"  "+item[1]+"  "+str(item[2])
-					computed_total += item[2]
-					#Calorie sum might differ between add-ups of time-tags and total reported from daily_totals
-		print "    Recorded Total: "+str(date_range[row_number][1])
-		print "    Calculated Total: "+str(computed_total)
+		print "    Total: "+str(date_range[row_number][1])
 		row_number += 1	
 		print "-----------"
  	
