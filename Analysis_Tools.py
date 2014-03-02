@@ -427,6 +427,7 @@ def calorie_analysis():
 	print "2. Sum up total and average calorie count for a range of dates."
 	print "3. Calculate a single BMR and visually compare it a date range of calories consumed."
 	print "4. Use BMR/estimated daily burn with calories over range to estimate surplus, deficit, and maintainence patterns."
+	print "5. Break down a date's or range of dates' calorie totals by times of consumption; at what times do you eat most?"
 	
 	nav_command = raw_input("Enter analysis number: ")
 
@@ -444,6 +445,9 @@ def calorie_analysis():
 
 	elif nav_command == '4':
 		surplus_deficit_over_range()
+
+	elif nav_command == '5':
+		times_breakdown()
 
 	else:
 		print "Command not found."
@@ -678,10 +682,62 @@ def surplus_deficit_over_range():
 	else:
 		print "Complete maintainence -- a state truly difficult to achieve!"
 	
-	print "------------------"	
+	print "------------------"
+
+	display_menu()	
 
 	#TODO: Offer a visualization with intervals instead of a single line indicating daily_burns and daily_calories over a period
 
+def times_breakdown():
+	#Function to breakdown dates by times of calorie consumption, using 'time' column in food_entries
+	print "Enter a date range to get percentage of total calories eaten over the different time tags."
+
+	date_range = raw_input("Enter dates-calories range as 'year-mm-dd TO year-mm-dd': ")
+
+	date_range_split = date_range.split(' TO ', 1)
+	start = date_range_split[0]
+	end = date_range_split[1]
+
+	date_range = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+
+	time_tags_used = []
+	totals = []
+	row_number = 0
+
+	for date in date_range:
+		date_entries = list(c.execute('SELECT * FROM food_entries WHERE date = ?', (date[0],)))
+		computed_total = 0
+
+		for entry in date_entries:
+			#print entry
+			if not entry[1] in time_tags_used: #Put all time tags used into a list
+				time_tags_used.append(entry[1])
+
+		for tag in time_tags_used:
+			tag_sum_calories = 0
+			for entry in date_entries:
+				if not tag in entry: continue
+				else:
+					tag_sum_calories += entry[3]	
+			totals.append([entry[0], tag, tag_sum_calories])
+
+		print date[0]
+		print "-----------"	
+		for item in totals:
+			if date[0] in item[0]:
+				if item[2] == 0:continue #Means tag not used, or calorie field = 0
+				else:
+					print item[0]+"  "+item[1]+"  "+str(item[2])
+					computed_total += item[2]
+					#Calorie sum might differ between add-ups of time-tags and total reported from daily_totals
+		print "    Recorded Total: "+str(date_range[row_number][1])
+		print "    Calculated Total: "+str(computed_total)
+		row_number += 1	
+		print "-----------"
+ 	
+		
+		
+	
 
 #####Run script
 
