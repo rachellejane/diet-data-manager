@@ -236,19 +236,7 @@ def refine_food_analysis_by_servings(matching_foods, search_food):
 			print "Number of servings/units consumed: "+str(computed_servings)
 
 	return matching_foods
-
-"""
-Seemed like it'd be better practice, but it looks like table names may not be parameterized
-
-def select_rows_over_date_range(table, start, end):
-
-	date_rows = list(c.execute('SELECT * FROM ? WHERE date BETWEEN ? AND ?', (table, start, end)))
-	return date_rows
-
-def select_single_row_date(table, date):
-	date_row = list(c.execute('SELECT * FROM ? WHERE date = ?', (table, date,)))
-	return date_row
-"""		
+	
 def exercise_analysis():
 	
 	print "Enter '1' to view exercise for a given date or range of dates."
@@ -692,9 +680,9 @@ def surplus_deficit_over_range():
 	
 	print "------------------"	
 
+	#TODO: Offer a visualization with intervals instead of a single line indicating daily_burns and daily_calories over a period
 
 
-	#surplus_deficit_over_range(range_calories, bmr, daily_burn  -- send this: range_calories, metabolic_estimate_itnervals
 #####Run script
 
 display_menu()
