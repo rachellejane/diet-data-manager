@@ -713,10 +713,12 @@ def times_breakdown():
 				time_tags_used.append(entry[1])
 
 		for tag in time_tags_used:
+			percent_of_total = 0.0
 			tag_sum_calories = 0
 			for entry in date_entries:
 				if not tag in entry: continue
 				else:
+					if entry[3] == None or entry[3] == '': continue
 					tag_sum_calories += entry[3]	
 			totals.append([entry[0], tag, tag_sum_calories])
 
@@ -725,6 +727,7 @@ def times_breakdown():
 		for item in totals:
 			if date[0] in item[0]:
 				if item[2] == 0:continue #Means tag not used, or calorie field = 0
+				if not item[1]: continue #Had a couple incorrectly-entered food entries with no time on them
 				else:
 					print item[0]+"  "+item[1]+"  "+str(item[2])
 		print "    Total: "+str(date_range[row_number][1])
