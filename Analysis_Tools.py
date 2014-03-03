@@ -438,7 +438,8 @@ def calorie_analysis():
 		view_calories_over_date_range()
 
 	elif nav_command == '2':
-		sum_total_calories()
+		sum_total_calories(None, None, None)
+		calorie_analysis()
 
 	elif nav_command == '3':
 		compute_bmr()
@@ -480,20 +481,24 @@ def view_calories_over_date_range():
 
 	else: calorie_analysis()
 
-def sum_total_calories():
+def sum_total_calories(given_range, start, end):
 
-	date_range = raw_input("Enter date range as 'year-mm-dd TO year-mm-dd': ")
+	if given_range == None and start == None and end == None:
+		date_range = raw_input("Enter date range as 'year-mm-dd TO year-mm-dd': ")
 
-	if ' TO ' in date_range:
-		#Fetch range of dates, just as done above, and sum up the calories column for all dates.
-		date_range = date_range.split(' TO ', 1)
-		start = date_range[0]
-		end = date_range[1]
+		if ' TO ' in date_range:
+			date_range = date_range.split(' TO ', 1)
+			start = date_range[0]
+			end = date_range[1]
 
-		range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+			range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+			print_results = True
 
-	else: 
-		print "Re-enter the date range with format: YEAR-MM-DD TO YEAR-MM-DD"
+		else: 
+			print "Re-enter the date range with format: YEAR-MM-DD TO YEAR-MM-DD"
+	else:
+		range_calories = given_range
+		print_results = False
 
 	if not range_calories:
 		print "Records not found for given range."
@@ -509,12 +514,13 @@ def sum_total_calories():
 			total_calories += record[1] #Sum up all the calories over given period 
 
 		total_days -= missing_days #Subtract missing days from total days
+	
+		if print_results == True:
+			print "Total calories consumed over range "+start+" to "+end+": "+str(total_calories)
+			print "Total days missing records: "+str(missing_days)
+			print "Average calories per day: "+str(total_calories/total_days)
 
-		print "Total calories consumed over range "+start+" to "+end+": "+str(total_calories)
-		print "Total days missing records: "+str(missing_days)
-		print "Average calories per day: "+str(total_calories/total_days)
-
-		calorie_analysis()
+		return total_calories
 
 def compute_bmr():
 	#Give user information about the BMR formula, then get operands. Compute. Then use Harris Benedict equation to compute
@@ -740,13 +746,13 @@ def times_breakdown():
 					print item[0]+"  "+item[1]+"  "+str(item[2])+ "  ("+percent_of_total+"%)"
 
 					visualization_content_list.append([item[0], item[1], item[2], total])
-					tag_averages.append([item[1], percent_of_total_raw])
+					tag_averages.append([item[1], item[2]])
 		#print "    Total: "+str(total)
 		row_number += 1	
 		print "-----------"
 
 	#To compute averages, sum up percent_of_total and divide it over number of entries w/that tag
-	compute_tag_averages(time_tags_used, tag_averages)	
+	compute_tag_averages(time_tags_used, tag_averages, start, end)	
 
  
 	#pipe_to_visuals = raw_input("View breakdowns for current date range in bar chart?")
@@ -755,21 +761,26 @@ def times_breakdown():
 	#visualization_content_list = [] #Needs [date, time tags, percentage for each time tag, and daily_total calories]
 	calorie_analysis() 	
 
-def compute_tag_averages(time_tags_used, tag_averages):
+def compute_tag_averages(time_tags_used, tag_averages, start, end):
 	#Compute average breakdown percentages for a time-tag over a date range. For instance, over a range 2012-09-16 to 2012-10-16, 
 	#the user ate an average 45% of their daily calories in the morning, 20% in the afternoon, 25% in the evening, and 10% as snack.
+
+	range_calories = list(c.execute('SELECT * FROM daily_totals WHERE date BETWEEN ? AND ?', (start, end)))
+
+	total_calories = sum_total_calories(range_calories, start, end)
+
 	for tag in time_tags_used:
-		total_tag_percent = 0.0
+		total_tag_calories = 0
 		total_tag_count = 0
 
 		for point in tag_averages:
 			if tag in point[0] and tag != '': #Evidently had a tag consisting of a '' in the list...
-				total_tag_percent += point[1]
+				total_tag_calories += point[1]
 				total_tag_count += 1
 	
 		if total_tag_count == 0: continue
 		else:
-			tag_average_percent = total_tag_percent/total_tag_count
+			tag_average_percent = (float(total_tag_calories)/total_calories)*100
 			tag_average_percent = str("%.2f" % tag_average_percent)
 			print tag_average_percent+"% of calories over range, on average, consumed in time: "+tag
 
