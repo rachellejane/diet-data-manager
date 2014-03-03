@@ -702,8 +702,10 @@ def times_breakdown():
 
 	time_tags_used = []
 	totals = []
+	visualization_content_list = [] #Needs [date, time tags, percentage for each time tag, and daily_total calories] 
+	tag_averages = []
 	row_number = 0
-
+	
 	for date in date_range:
 		date_entries = list(c.execute('SELECT * FROM food_entries WHERE date = ?', (date[0],)))
 
@@ -713,7 +715,6 @@ def times_breakdown():
 				time_tags_used.append(entry[1])
 
 		for tag in time_tags_used:
-			percent_of_total = 0.0
 			tag_sum_calories = 0
 			for entry in date_entries:
 				if not tag in entry: continue
@@ -722,21 +723,57 @@ def times_breakdown():
 					tag_sum_calories += entry[3]	
 			totals.append([entry[0], tag, tag_sum_calories])
 
-		print date[0]
+		print date[0] + " -- " + str(date_range[row_number][1])
 		print "-----------"	
 		for item in totals:
 			if date[0] in item[0]:
 				if item[2] == 0:continue #Means tag not used, or calorie field = 0
 				if not item[1]: continue #Had a couple incorrectly-entered food entries with no time on them
+
 				else:
-					print item[0]+"  "+item[1]+"  "+str(item[2])
-		print "    Total: "+str(date_range[row_number][1])
+					#%total = time_total/daily_total cals
+					total = date_range[row_number][1]
+					if total == 0: continue
+	
+					percent_of_total_raw = (float(item[2])/total)*100 
+					percent_of_total = str("%.2f" % percent_of_total_raw)
+					print item[0]+"  "+item[1]+"  "+str(item[2])+ "  ("+percent_of_total+"%)"
+
+					visualization_content_list.append([item[0], item[1], item[2], total])
+					tag_averages.append([item[1], percent_of_total_raw])
+		#print "    Total: "+str(total)
 		row_number += 1	
 		print "-----------"
- 	
+
+	#To compute averages, sum up percent_of_total and divide it over number of entries w/that tag
+	compute_tag_averages(time_tags_used, tag_averages)	
+
+ 
+	#pipe_to_visuals = raw_input("View breakdowns for current date range in bar chart?")
 		
 		
+	#visualization_content_list = [] #Needs [date, time tags, percentage for each time tag, and daily_total calories]
+	calorie_analysis() 	
+
+def compute_tag_averages(time_tags_used, tag_averages):
+	#Compute average breakdown percentages for a time-tag over a date range. For instance, over a range 2012-09-16 to 2012-10-16, 
+	#the user ate an average 45% of their daily calories in the morning, 20% in the afternoon, 25% in the evening, and 10% as snack.
+	for tag in time_tags_used:
+		total_tag_percent = 0.0
+		total_tag_count = 0
+
+		for point in tag_averages:
+			if tag in point[0] and tag != '': #Evidently had a tag consisting of a '' in the list...
+				total_tag_percent += point[1]
+				total_tag_count += 1
 	
+		if total_tag_count == 0: continue
+		else:
+			tag_average_percent = total_tag_percent/total_tag_count
+			tag_average_percent = str("%.2f" % tag_average_percent)
+			print tag_average_percent+"% of calories over range, on average, consumed in time: "+tag
+
+
 
 #####Run script
 
